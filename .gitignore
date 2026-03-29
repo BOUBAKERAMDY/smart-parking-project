@@ -1,0 +1,6 @@
+models/
+__pycache__/
+*.pyc
+data/processed_occupancy.csv
+data/on-street-parking-bay-sensors.csv
+.ruff_cache/

@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with Ruff
+        run: ruff check .
+
+      - name: Generate synthetic dataset for CI
+        run: |
+          python - <<'EOF'
+          import os
+          import numpy as np
+          import pandas as pd
+
+          os.makedirs("data", exist_ok=True)
+          np.random.seed(42)
+
+          n = 5000
+          zones = [f"Z{i:03d}" for i in range(1, 6)]
+          timestamps = pd.date_range("2024-01-01", periods=500, freq="15min", tz="UTC")
+
+          rows = []
+          for _ in range(n):
+              rows.append({
+                  "Status_Timestamp": np.random.choice(timestamps).isoformat(),
+                  "Zone_Number": np.random.choice(zones),
+                  "Status_Description": np.random.choice(["Occupied", "Unoccupied"]),
+                  "KerbsideID": f"BAY_{np.random.randint(1, 50):03d}",
+                  "Location": "Test St",
+                  "LastUpdated": pd.Timestamp.now().isoformat(),
+              })
+
+          df = pd.DataFrame(rows)
+          df.to_csv("data/on-street-parking-bay-sensors.csv", index=False)
+          print(f"Generated {len(df)} rows across {df['Zone_Number'].nunique()} zones")
+          EOF
+
+      - name: Run ETL and train model
+        run: python train.py
+
+      - name: Run tests
+        run: pytest tests/ -v

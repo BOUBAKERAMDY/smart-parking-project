@@ -1,0 +1,28 @@
+data:
+  raw_path: "data/on-street-parking-bay-sensors.csv"
+  processed_path: "data/processed_occupancy.csv"
+  timestamp_col: "Status_Timestamp"
+  status_col: "Status_Description"
+  zone_col: "Zone_Number"
+  occupied_values: ["Present", "Occupied"]
+  unoccupied_values: ["Unoccupied"]
+  resample_freq: "h"
+
+model:
+  path: "models/parking_model.keras"
+  scaler_path: "models/scaler.pkl"
+  lookback: 12
+  lstm_units: 64
+  gru_units: 32
+  dropout_rate: 0.2
+  epochs: 50
+  batch_size: 32
+  validation_split: 0.1
+  early_stop_patience: 5
+  test_split: 0.2
+
+api:
+  host: "0.0.0.0"
+  port: 8080
+  title: "Smart Parking Predictor"
+  version: "1.0.0"
